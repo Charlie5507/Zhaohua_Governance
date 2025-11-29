@@ -1,0 +1,9 @@
+{
+    "name": "Zhaohua Governance",
+    "display_name": "昭华政务生成器",
+    "description": "为小皇帝角色卡提供随机政务案件生成，包含林观砚与萧则燃的专属建议。",
+    "author": "YourName",
+    "version": "1.0.0",
+    "loading_order": 1,
+    "requires": []
+}
