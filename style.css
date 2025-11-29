@@ -1,55 +1,53 @@
-/* --- 昭华政务样式表 v2.0 --- */
+/* --- 昭华政务样式表 v2.1 --- */
 
 /* 1. 悬浮按钮 */
 #zhaohua-toggle-btn {
-    position: fixed;
-    top: 10px; right: 180px; z-index: 2147483647;
-    width: 45px; height: 45px;
-    display: flex; align-items: center; justify-content: center;
+    position: fixed; top: 10px; right: 180px; z-index: 2147483647;
+    width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;
     font-size: 26px; cursor: pointer; user-select: none;
     background: linear-gradient(135deg, #F4D03F 0%, #F1C40F 100%);
     border: 2px solid #FFF; border-radius: 50%;
-    box-shadow: 0 0 10px rgba(244, 208, 63, 0.5);
-    transition: transform 0.2s;
+    box-shadow: 0 0 10px rgba(244, 208, 63, 0.5); transition: transform 0.2s;
 }
 #zhaohua-toggle-btn:hover { transform: scale(1.1); }
-#zhaohua-toggle-btn.loading { animation: spin 1s linear infinite; cursor: wait; filter: grayscale(0.5); }
-@keyframes spin { 100% { transform: rotate(360deg); } }
 
-/* 2. 遮罩与主窗口 */
+/* 2. 主窗口与遮罩 */
 #zhaohua-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.7); z-index: 2147483646;
-    display: none; justify-content: center; align-items: center;
-    backdrop-filter: blur(3px);
+    display: none; justify-content: center; align-items: center; backdrop-filter: blur(3px);
 }
-
 #zhaohua-panel {
     background-color: #FFF9E6; border: 4px solid #F4D03F; border-radius: 15px;
     width: 90%; max-width: 800px; height: 85vh;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     font-family: 'Microsoft YaHei', sans-serif;
-    display: flex; flex-direction: column; overflow: hidden;
-    position: relative;
+    display: flex; flex-direction: column; overflow: hidden; position: relative;
 }
 
-/* 标题栏 */
+/* 标题栏与工具栏 */
 .zh-header {
-    background: #F4D03F; padding: 12px; text-align: center;
-    color: #5D4037; font-size: 1.2em; font-weight: bold;
-    border-bottom: 2px dashed #D4AC0D; position: relative; flex-shrink: 0;
+    background: #F4D03F; padding: 10px 15px; display: flex; align-items: center;
+    justify-content: space-between; border-bottom: 2px dashed #D4AC0D; flex-shrink: 0;
 }
+.zh-title { font-weight: bold; color: #5D4037; font-size: 1.2em; flex-grow: 1; text-align: center; }
+.zh-toolbar-left { display: flex; gap: 8px; z-index: 10; }
+.zh-icon-btn {
+    background: rgba(255,255,255,0.3); border: 1px solid #D4AC0D;
+    border-radius: 4px; cursor: pointer; padding: 5px 8px; font-size: 1.1em;
+    transition: background 0.2s;
+}
+.zh-icon-btn:hover { background: rgba(255,255,255,0.6); }
 .zh-exit-btn {
-    position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
-    cursor: pointer; font-size: 0.9em; color: #fff; background: #D35400;
-    padding: 4px 10px; border-radius: 4px; border: none;
+    background: #D35400; color: #fff; border: none; padding: 5px 12px;
+    border-radius: 4px; cursor: pointer; font-size: 0.9em;
 }
 
 /* 视图容器 */
 .zh-view { display: none; flex-direction: column; height: 100%; padding: 20px; overflow-y: auto; }
 .zh-view.active { display: flex; }
 
-/* --- 视图1：案件选择 --- */
+/* 案件选择视图 */
 .zh-loading-text { text-align: center; margin-top: 50px; color: #888; font-style: italic; }
 .zh-selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
 .zh-select-card {
@@ -60,49 +58,43 @@
 .zh-card-title { color: #D35400; font-weight: bold; margin-bottom: 10px; font-size: 1.1em; }
 .zh-card-preview { font-size: 0.9em; color: #666; line-height: 1.5; }
 
-/* --- 视图2：案件详情 --- */
+/* 案件详情视图 */
 .zh-detail-container { display: flex; flex-direction: column; height: 100%; gap: 15px; }
-
-/* 案件描述区 */
 .zh-case-info { background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #eee; flex-shrink: 0; }
 .zh-case-title { margin: 0 0 10px 0; color: #D35400; font-size: 1.3em; }
-.zh-case-desc { color: #444; line-height: 1.6; }
-
-/* 建议展示区 */
 .zh-advice-row { display: flex; gap: 10px; flex-shrink: 0; }
 .zh-advice-box { flex: 1; padding: 10px; border-radius: 8px; font-size: 0.9em; }
 .zh-advice-lin { background: #E0F7FA; border: 1px solid #81D4FA; }
 .zh-advice-xiao { background: #FFEBEE; border: 1px solid #FFAB91; }
 .zh-name-tag { font-weight: bold; display: block; margin-bottom: 5px; }
-
-/* 聊天记录区 */
 .zh-chat-log {
     flex-grow: 1; background: rgba(255,255,255,0.6); border: 1px solid #ccc;
-    border-radius: 8px; padding: 10px; overflow-y: auto; font-size: 0.9em;
-    margin-bottom: 10px; min-height: 100px;
+    border-radius: 8px; padding: 10px; overflow-y: auto; font-size: 0.9em; margin-bottom: 10px;
 }
 .zh-msg { margin-bottom: 8px; padding: 5px 8px; border-radius: 5px; max-width: 80%; }
 .zh-msg.lin { background: #E0F7FA; color: #01579B; align-self: flex-start; }
 .zh-msg.xiao { background: #FFEBEE; color: #BF360C; align-self: flex-start; }
 .zh-msg.user { background: #FFF3E0; color: #E65100; margin-left: auto; text-align: right; }
-
-/* 底部操作区 */
 .zh-action-area { display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
 .zh-chat-input-row { display: flex; gap: 10px; }
 .zh-chat-input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
 .zh-chat-send { background: #8D6E63; color: #fff; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; }
-
 .zh-decision-row { display: flex; gap: 10px; margin-top: 5px; }
-.zh-btn { flex: 1; padding: 10px; border: none; border-radius: 20px; cursor: pointer; color: #fff; font-weight: bold; transition: opacity 0.2s; }
+.zh-btn { flex: 1; padding: 10px; border: none; border-radius: 20px; cursor: pointer; color: #fff; font-weight: bold; }
 .zh-btn:hover { opacity: 0.9; }
-.btn-lin { background: #0288D1; }
-.btn-xiao { background: #D84315; }
-.btn-custom { background: #FBC02D; color: #5D4037; }
+.btn-lin { background: #0288D1; } .btn-xiao { background: #D84315; } .btn-custom { background: #FBC02D; color: #5D4037; }
 
-/* --- 自定义弹窗 --- */
-#zh-custom-modal {
+/* --- 弹窗通用样式 (配置/警告/自定义) --- */
+.zh-modal-layer {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center;
+    background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 100;
 }
-.zh-custom-box { background: #fff; padding: 20px; border-radius: 10px; width: 80%; }
-.zh-custom-textarea { width: 100%; height: 100px; margin: 10px 0; padding: 10px; box-sizing: border-box; }
+.zh-modal-box { background: #fff; padding: 20px; border-radius: 10px; width: 80%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+.zh-modal-title { margin-top: 0; color: #D35400; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+.zh-input-group { margin-bottom: 15px; }
+.zh-input-label { display: block; font-size: 0.9em; color: #666; margin-bottom: 5px; }
+.zh-input-field { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+.zh-modal-footer { text-align: right; display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.zh-btn-secondary { background: #999; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+.zh-btn-primary { background: #0288D1; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+.zh-btn-danger { background: #D32F2F; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
