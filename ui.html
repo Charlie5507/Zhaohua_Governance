@@ -1,20 +1,47 @@
-<div id="zhaohua-governance-root">
-    <div id="zhaohua-modal-overlay">
-        <div id="zhaohua-modal">
+<div id="zhaohua-root">
+    <div id="zhaohua-overlay">
+        <div id="zhaohua-panel">
+            <!-- 标题 -->
             <div class="zh-header">
-                👑 昭华政务殿
-                <span class="zh-close">✖</span>
+                <span>👑 昭华政务殿</span>
+                <span class="zh-close-btn" id="zh-btn-close">×</span>
             </div>
-            <div class="zh-content" id="zh-dynamic-content">
-                <!-- JavaScript 将会在这里填充动态内容 -->
-                <div class="zh-desc">
-                    <h3 style="margin-top:0;">奏折标题</h3>
-                    <p>奏折描述...</p>
+
+            <!-- 动态内容区 -->
+            <div class="zh-content">
+                
+                <!-- 案件描述 -->
+                <div class="zh-desc-box">
+                    <h3 class="zh-desc-title" id="zh-affair-title">案件标题加载中...</h3>
+                    <p class="zh-desc-text" id="zh-affair-desc">案件详情加载中...</p>
                 </div>
+
+                <div style="text-align:center; margin-bottom:10px; color:#999; font-size:0.9em;">
+                    👇 请陛下点击下方卡片，采纳建议 👇
+                </div>
+
+                <!-- 建议选项 -->
                 <div class="zh-advices">
-                    <div class="zh-card lin"></div>
-                    <div class="zh-card xiao"></div>
+                    <!-- 林观砚 -->
+                    <div class="zh-card lin" id="zh-card-lin">
+                        <span class="zh-avatar">🎋</span>
+                        <span class="zh-name" style="color:#0277BD">林观砚</span>
+                        <div class="zh-text" id="zh-text-lin">...</div>
+                    </div>
+
+                    <!-- 萧则燃 -->
+                    <div class="zh-card xiao" id="zh-card-xiao">
+                        <span class="zh-avatar">🔥</span>
+                        <span class="zh-name" style="color:#D84315">萧则燃</span>
+                        <div class="zh-text" id="zh-text-xiao">...</div>
+                    </div>
                 </div>
+
+                <!-- 自定义按钮 -->
+                <div class="zh-footer">
+                    <button class="zh-btn-ignore" id="zh-btn-ignore">朕自有决断 (仅关闭)</button>
+                </div>
+
             </div>
         </div>
     </div>
