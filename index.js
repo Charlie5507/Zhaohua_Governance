@@ -1,162 +1,296 @@
-// --- 昭华政务生成器 (v1.2 悬浮按钮版) ---
-
-// 案件数据库
-const affairs = [
-    {
-        title: "醉酒诗人闹事案",
-        desc: "一名狂生在朱雀大街醉酒，并在户部尚书的轿子上题了一首打油诗，引发围观，阻碍了交通。",
-        lin: { text: "此人虽狂，但若因言获罪恐失人心。罚他在国子监扫地三日，既惩戒其行，又全了陛下爱才之名。", reply: "林卿思虑周全，便依你所言，罚他去国子监扫地，磨磨性子。" },
-        xiao: { text: "敢在尚书轿子上乱画？有点胆色！陛下，不如把他抓来给您讲笑话，讲不好笑再打板子！", reply: "萧则燃你尽出馊主意！不过...讲笑话倒是不错，先带进来给朕瞧瞧。" }
-    },
-    {
-        title: "边境互市骆驼争议",
-        desc: "西域互市时，一只藩国的骆驼吐了守城将领一脸口水，双方士兵差点打起来，将领请求严惩。",
-        lin: { text: "两国交好，不宜因畜生伤了和气。建议修书一封给藩王，让他赔偿将领些许安抚费即可。", reply: "太傅教导过要以和为贵，林卿所言甚是，赔点银两安抚一下便是。" },
-        xiao: { text: "那将领躲不开骆驼口水？平日训练都练到狗肚子里去了？臣申请去边境练兵，顺便把那骆驼烤了！", reply: "烤骆驼？亏你想得出来！不过那将领确实该练练了，准你去‘操练’他一番。" }
-    },
-    {
-        title: "御花园翻修预算",
-        desc: "工部申请拨银五千两翻修凉亭，但有人举报工部侍郎想借机给自家花园顺两块太湖石。",
-        lin: { text: "臣愿去‘监工’，定能让这五千两变成五百两。", reply: "林卿出马朕最放心，去查查那侍郎的底细，别让他把朕的银子贪了。" },
-        xiao: { text: "修什么凉亭！直接拆了改成演武场！以后臣就能在宫里教您射箭了，多好！", reply: "演武场...朕倒是有些心动，不过太傅怕是要骂人。萧则燃，你先带朕去看看那凉亭破成啥样了。" }
-    },
-    {
-        title: "进贡的食铁兽",
-        desc: "南方进贡了一只黑白相间、以竹为食的‘食铁兽’。此兽极其懒惰，每日只知睡觉吃竹子。",
-        lin: { text: "此兽憨态可掬，乃祥瑞之兆。可在御花园辟一处竹林饲养。", reply: "祥瑞不祥瑞的朕不在乎，看着确实可爱。林卿，给它批最好的竹子！" },
-        xiao: { text: "哇！软乎乎的！陛下，能不能养在您的寝宫里？臣想去摸...啊不，臣是怕它伤到陛下！", reply: "养在寝宫？太傅会气晕过去吧？不过...朕准你每日随朕去喂它。" }
-    },
-    {
-        title: "小王爷的“新生意”",
-        desc: "小王爷（你表弟）在西市开了家‘盲盒店’，专卖用布包着的石头，据说有百姓为了买石头倾家荡产，御史台参了一本。",
-        lin: { text: "此风涉嫌赌博，且扰乱市井。应勒令关停，并让小王爷将所得银两退还百姓。陛下不可姑息。", reply: "这混小子又惹事。林卿说得对，让他关门退钱！朕还要罚他抄书！" },
-        xiao: { text: "盲盒？听着挺有意思啊！陛下，要不咱们微服出宫去看看？若是骗人，我当场砸了他的店！", reply: "走！朕倒要看看他葫芦里卖的什么药。要是敢骗人，萧则燃你帮朕按住他！" }
-    }
-];
+// --- 昭华政务生成器 v2.0 (AI实时生成版) ---
+import { getContext } from '../../../extensions.js';
 
 const ZhaohuaGov = {
     panelLoaded: false,
-    currentAffair: null,
+    currentCases: [], // 存储生成的案件列表
+    activeCase: null, // 当前选中的案件
 
-    // 初始化
     async init() {
-        console.log("👑 [Zhaohua] 插件正在启动...");
+        console.log("👑 [Zhaohua v2] 启动中...");
         this.injectToggleButton();
         await this.loadHTML();
-
         if (this.panelLoaded) {
             this.bindEvents();
-            console.log("✅ [Zhaohua] 初始化成功。");
+            console.log("✅ [Zhaohua v2] 就绪。");
         }
     },
 
-    // 1. 注入悬浮按钮 
     injectToggleButton() {
         if (document.getElementById("zhaohua-toggle-btn")) return;
-
         const btn = document.createElement("div");
         btn.id = "zhaohua-toggle-btn";
-        btn.innerHTML = "📜"; // 按钮图标
-        btn.title = "批阅奏折";
-        
-        // 点击事件
-        btn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            this.openModal();
-        });
-        
+        btn.innerHTML = "📜";
+        btn.title = "生成今日政务";
+        btn.onclick = (e) => { e.stopPropagation(); this.generateDailyCases(); };
         document.body.appendChild(btn);
     },
 
-    // 2. 加载 HTML 文件
     async loadHTML() {
         try {
-            // 使用 import.meta.url 获取当前脚本路径，从而定位 ui.html
             const panelUrl = new URL('./ui.html', import.meta.url).href;
             const response = await fetch(panelUrl);
-            
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            
             const html = await response.text();
             const container = document.createElement("div");
             container.innerHTML = html;
-            document.body.appendChild(container.firstElementChild); // 将 #zhaohua-root 添加到 body
-            
+            document.body.appendChild(container.firstElementChild);
             this.panelLoaded = true;
-        } catch (e) {
-            console.error("❌ [Zhaohua] HTML 加载失败:", e);
-        }
+        } catch (e) { console.error("HTML加载失败", e); }
     },
 
-    // 3. 打开弹窗并随机生成案件
-    openModal() {
+    // --- 核心功能：调用AI生成案件 ---
+    async generateDailyCases() {
         const overlay = document.getElementById("zhaohua-overlay");
-        if (!overlay) return;
+        const loading = document.getElementById("zh-loading");
+        const grid = document.getElementById("zh-selection-grid");
+        const btn = document.getElementById("zhaohua-toggle-btn");
 
-        // 随机抽取
-        this.currentAffair = affairs[Math.floor(Math.random() * affairs.length)];
-        const affair = this.currentAffair;
-
-        // 填充数据
-        document.getElementById("zh-affair-title").innerText = affair.title;
-        document.getElementById("zh-affair-desc").innerText = affair.desc;
-        document.getElementById("zh-text-lin").innerText = affair.lin.text;
-        document.getElementById("zh-text-xiao").innerText = affair.xiao.text;
-
-        // 显示
+        // 切换到选择视图
+        this.switchView('selection');
         overlay.style.display = "flex";
-    },
+        grid.innerHTML = "";
+        loading.style.display = "block";
+        btn.classList.add("loading");
 
-    // 4. 绑定点击事件
-    bindEvents() {
-        // 关闭按钮
-        const closeBtn = document.getElementById("zh-btn-close");
-        if (closeBtn) closeBtn.onclick = () => this.closeModal();
+        // 构造 Prompt
+        const prompt = `
+        Roleplay as a dynamic event generator for a game set in ancient China (Song/Yuan dynasty style).
+        Characters:
+        1. User (Young Emperor)
+        2. Lin Guanyan (Advisor, serious, scheming, elegant, gentle but strict)
+        3. Xiao Zeran (General's son, energetic, hot-blooded, reckless, funny)
+
+        Task: Generate 2 funny, lighthearted, daily-life court cases or problems for the User to solve.
+        Format: Strictly JSON array. No markdown, no explanation.
+        Structure per case:
+        {
+            "title": "Case Title",
+            "desc": "Description of the funny problem",
+            "lin_advice": "Lin's advice (in character, slightly sarcastic or overly proper)",
+            "xiao_advice": "Xiao's advice (in character, reckless or chaotic)"
+        }
         
-        const ignoreBtn = document.getElementById("zh-btn-ignore");
-        if (ignoreBtn) ignoreBtn.onclick = () => this.closeModal();
+        Make the cases funny and related to the setting (e.g., a camel spitting on a guard, a poet writing graffiti, a cat stealing the royal seal).
+        Language: Simplified Chinese.
+        `;
 
-        // 林观砚卡片点击
-        const cardLin = document.getElementById("zh-card-lin");
-        if (cardLin) {
-            cardLin.onclick = () => {
-                if (this.currentAffair) this.handleDecision(this.currentAffair.lin.reply);
-            };
-        }
-
-        // 萧则燃卡片点击
-        const cardXiao = document.getElementById("zh-card-xiao");
-        if (cardXiao) {
-            cardXiao.onclick = () => {
-                if (this.currentAffair) this.handleDecision(this.currentAffair.xiao.reply);
-            };
-        }
-    },
-
-    closeModal() {
-        const overlay = document.getElementById("zhaohua-overlay");
-        if (overlay) overlay.style.display = "none";
-    },
-
-    // 5. 执行决定 (发送消息)
-    handleDecision(replyText) {
-        this.closeModal();
-
-        // 模仿 CTE 的发送逻辑：填充输入框并触发 input 事件
-        const textarea = document.getElementById('send_textarea');
-        if (textarea && replyText) {
-            textarea.value = replyText;
-            // 触发 input 事件让 ST 知道有内容
-            textarea.dispatchEvent(new Event('input', { bubbles: true }));
-            textarea.focus();
+        try {
+            // 调用 ST 的生成接口
+            // 注意：这里使用 generateRaw 是假设想获取纯文本，但在扩展中通常通过 context.generate 
+            // 为了不污染聊天记录，我们手动构造请求
+            const context = getContext();
             
-            // 可选：自动点击发送 (如果想让用户确认，可以注释掉下面这行)
-            // document.getElementById('send_but').click(); 
+            // 发送系统指令（隐藏）
+            // 这里的实现技巧：使用 fetch 直接请求 API 或者利用 context 
+            // 简单起见，我们模拟一次生成，但在此之前，建议用户在设置里把 Response Length 调高一点
+            
+            // ⚠️ 关键：为了确保能拿到 JSON，我们使用 'Quiet' 模式或手动处理
+            // 这里使用一个简单的 fetch 包装器来调用 ST 的 completion API
+            const result = await this.fetchLLM(prompt);
+            
+            // 解析 JSON
+            let jsonStr = result.replace(/```json|```/g, '').trim();
+            // 尝试提取数组部分
+            const firstBracket = jsonStr.indexOf('[');
+            const lastBracket = jsonStr.lastIndexOf(']');
+            if (firstBracket !== -1 && lastBracket !== -1) {
+                jsonStr = jsonStr.substring(firstBracket, lastBracket + 1);
+            }
+
+            this.currentCases = JSON.parse(jsonStr);
+            this.renderSelectionGrid();
+
+        } catch (e) {
+            console.error("生成失败", e);
+            grid.innerHTML = `<div style="color:red; text-align:center;">生成失败，请重试。<br>错误信息: ${e.message}</div>`;
+        } finally {
+            loading.style.display = "none";
+            btn.classList.remove("loading");
         }
+    },
+
+    // 模拟调用 LLM (适配 ST API)
+    async fetchLLM(promptText) {
+        const context = getContext();
+        // 获取当前设置
+        const url = '/api/generate'; // ST 标准 API 端点
+        
+        // 简单的请求体构造
+        const body = {
+            prompt: promptText,
+            max_length: 600,
+            temperature: 0.7,
+            top_p: 0.9,
+            top_k: 0,
+            rep_pen: 1.1
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        if (!response.ok) throw new Error('API Request Failed');
+        const data = await response.json();
+        // 处理不同后端返回格式
+        return data.results ? data.results[0].text : data.text; 
+    },
+
+    // --- 渲染逻辑 ---
+
+    renderSelectionGrid() {
+        const grid = document.getElementById("zh-selection-grid");
+        grid.innerHTML = "";
+
+        this.currentCases.forEach((affair, index) => {
+            const card = document.createElement("div");
+            card.className = "zh-select-card";
+            card.innerHTML = `
+                <div class="zh-card-title">${affair.title}</div>
+                <div class="zh-card-preview">${affair.desc.substring(0, 50)}...</div>
+            `;
+            card.onclick = () => this.selectCase(index);
+            grid.appendChild(card);
+        });
+    },
+
+    selectCase(index) {
+        this.activeCase = this.currentCases[index];
+        this.switchView('detail');
+
+        // 填充详情
+        document.getElementById("zh-detail-title").innerText = this.activeCase.title;
+        document.getElementById("zh-detail-desc").innerText = this.activeCase.desc;
+        document.getElementById("zh-detail-lin").innerText = this.activeCase.lin_advice;
+        document.getElementById("zh-detail-xiao").innerText = this.activeCase.xiao_advice;
+        
+        // 清空聊天记录
+        document.getElementById("zh-chat-log").innerHTML = `
+            <div style="color:#999; text-align:center; font-style:italic; padding-top:20px;">
+                在此处与他们商议，或直接做出决断...
+            </div>
+        `;
+    },
+
+    async sendChat() {
+        const input = document.getElementById("zh-chat-input");
+        const text = input.value.trim();
+        if (!text) return;
+
+        const log = document.getElementById("zh-chat-log");
+        
+        // 1. 添加用户消息
+        const userMsg = document.createElement("div");
+        userMsg.className = "zh-msg user";
+        userMsg.innerText = text;
+        log.appendChild(userMsg);
+        input.value = "";
+        log.scrollTop = log.scrollHeight;
+
+        // 2. 构造 Prompt 获取 NPC 回复
+        const prompt = `
+        Context: Ancient China setting.
+        Case: ${this.activeCase.title} - ${this.activeCase.desc}
+        Characters: Lin Guanyan (Serious advisor), Xiao Zeran (Reckless general's son).
+        User says: "${text}"
+        Task: Provide a short dialogue response from BOTH Lin Guanyan and Xiao Zeran reacting to the user.
+        Format: 
+        Lin: [Response]
+        Xiao: [Response]
+        Language: Simplified Chinese. Keep it short and funny.
+        `;
+
+        // 显示正在输入...
+        const loadingMsg = document.createElement("div");
+        loadingMsg.innerText = "Thinking...";
+        loadingMsg.style.fontSize = "0.8em";
+        loadingMsg.style.color = "#999";
+        log.appendChild(loadingMsg);
+
+        try {
+            const result = await this.fetchLLM(prompt);
+            log.removeChild(loadingMsg);
+
+            // 简单解析回复
+            const lines = result.split('\n');
+            lines.forEach(line => {
+                if (line.includes("Lin:") || line.includes("林")) {
+                    const d = document.createElement("div");
+                    d.className = "zh-msg lin";
+                    d.innerText = line.replace(/Lin:|林:|Lin Guanyan:/i, "🎋 林:").trim();
+                    log.appendChild(d);
+                }
+                else if (line.includes("Xiao:") || line.includes("萧")) {
+                    const d = document.createElement("div");
+                    d.className = "zh-msg xiao";
+                    d.innerText = line.replace(/Xiao:|萧:|Xiao Zeran:/i, "🔥 萧:").trim();
+                    log.appendChild(d);
+                }
+            });
+            log.scrollTop = log.scrollHeight;
+
+        } catch (e) {
+            loadingMsg.innerText = "回复失败";
+        }
+    },
+
+    // --- 决策逻辑 ---
+
+    makeDecision(type) {
+        let text = "";
+        const caseInfo = `【处理政务：${this.activeCase.title}】\n案情：${this.activeCase.desc}\n`;
+
+        if (type === 'lin') {
+            text = `${caseInfo}朕决定采纳林观砚的建议：${this.activeCase.lin_advice}\n（转头对林观砚说）“林卿所言极是，就按你说的办。”`;
+        } else if (type === 'xiao') {
+            text = `${caseInfo}朕决定采纳萧则燃的建议：${this.activeCase.xiao_advice}\n（拍拍萧则燃的肩膀）“这次就听你的，别给朕搞砸了！”`;
+        } else if (type === 'custom') {
+            const customText = document.getElementById("zh-custom-text").value;
+            if (!customText) return;
+            text = `${caseInfo}朕决定：${customText}`;
+            document.getElementById("zh-custom-modal").style.display = "none";
+        }
+
+        // 填入 ST 输入框并发送
+        const textarea = document.getElementById('send_textarea');
+        if (textarea) {
+            textarea.value = text;
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+            document.getElementById('zhaohua-overlay').style.display = "none"; // 关闭弹窗
+            // document.getElementById('send_but').click(); // 自动发送（可选）
+        }
+    },
+
+    // --- 辅助功能 ---
+    switchView(viewName) {
+        document.querySelectorAll('.zh-view').forEach(v => v.classList.remove('active'));
+        if (viewName === 'selection') document.getElementById('zh-view-selection').classList.add('active');
+        if (viewName === 'detail') document.getElementById('zh-view-detail').classList.add('active');
+    },
+
+    bindEvents() {
+        document.getElementById("zh-btn-global-exit").onclick = () => {
+            document.getElementById("zhaohua-overlay").style.display = "none";
+        };
+        
+        document.getElementById("zh-btn-chat-send").onclick = () => this.sendChat();
+        
+        // 决策按钮
+        document.getElementById("zh-adopt-lin").onclick = () => this.makeDecision('lin');
+        document.getElementById("zh-adopt-xiao").onclick = () => this.makeDecision('xiao');
+        
+        // 自定义弹窗
+        document.getElementById("zh-adopt-custom").onclick = () => {
+            document.getElementById("zh-custom-modal").style.display = "flex";
+        };
+        document.getElementById("zh-custom-cancel").onclick = () => {
+            document.getElementById("zh-custom-modal").style.display = "none";
+        };
+        document.getElementById("zh-custom-confirm").onclick = () => this.makeDecision('custom');
     }
 };
 
-// 启动
 (function() {
     ZhaohuaGov.init();
 })();
