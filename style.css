@@ -1,100 +1,156 @@
-/* --- 昭华政务样式表 v2.1 --- */
+/* --- 昭华政务样式表 v2.2 (宫廷少女风) --- */
 
-/* 1. 悬浮按钮 */
+/* 全局字体与变量 */
+#zhaohua-root {
+    --zh-gold: #F4D03F;
+    --zh-pink: #FFB7B2;
+    --zh-pink-light: #FFDAC1;
+    --zh-cream: #FFF9E6;
+    --zh-blue-soft: #B5EAD7;
+    --zh-text: #6D4C41;
+    --zh-shadow: rgba(255, 183, 178, 0.4);
+}
+
+/* 1. 悬浮按钮 (变圆润可爱) */
 #zhaohua-toggle-btn {
     position: fixed; top: 10px; right: 180px; z-index: 2147483647;
-    width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;
-    font-size: 26px; cursor: pointer; user-select: none;
-    background: linear-gradient(135deg, #F4D03F 0%, #F1C40F 100%);
-    border: 2px solid #FFF; border-radius: 50%;
-    box-shadow: 0 0 10px rgba(244, 208, 63, 0.5); transition: transform 0.2s;
+    width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+    font-size: 28px; cursor: pointer; user-select: none;
+    background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%);
+    border: 3px solid #FFF; border-radius: 50%;
+    box-shadow: 0 4px 15px var(--zh-shadow);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: floatBtn 3s ease-in-out infinite;
 }
-#zhaohua-toggle-btn:hover { transform: scale(1.1); }
+#zhaohua-toggle-btn:hover { transform: scale(1.15) rotate(10deg); }
+@keyframes floatBtn { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
 /* 2. 主窗口与遮罩 */
 #zhaohua-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.7); z-index: 2147483646;
-    display: none; justify-content: center; align-items: center; backdrop-filter: blur(3px);
+    background: rgba(255, 255, 255, 0.3); z-index: 2147483646;
+    display: none; justify-content: center; align-items: center;
+    backdrop-filter: blur(5px);
 }
+
 #zhaohua-panel {
-    background-color: #FFF9E6; border: 4px solid #F4D03F; border-radius: 15px;
+    background-color: #FFF;
+    background-image: radial-gradient(#FFDAC1 15%, transparent 16%), radial-gradient(#FFDAC1 15%, transparent 16%);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+    border: 5px solid var(--zh-pink-light);
+    border-radius: 30px;
     width: 90%; max-width: 800px; height: 85vh;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    font-family: 'Microsoft YaHei', sans-serif;
+    box-shadow: 0 15px 40px rgba(255, 154, 158, 0.3);
+    font-family: 'Microsoft YaHei', 'Nunito', sans-serif;
     display: flex; flex-direction: column; overflow: hidden; position: relative;
 }
 
-/* 标题栏与工具栏 */
+/* 标题栏 */
 .zh-header {
-    background: #F4D03F; padding: 10px 15px; display: flex; align-items: center;
-    justify-content: space-between; border-bottom: 2px dashed #D4AC0D; flex-shrink: 0;
+    background: #FFF; padding: 12px 20px; display: flex; align-items: center;
+    justify-content: space-between; border-bottom: 3px dotted var(--zh-pink);
+    flex-shrink: 0; border-radius: 25px 25px 0 0;
 }
-.zh-title { font-weight: bold; color: #5D4037; font-size: 1.2em; flex-grow: 1; text-align: center; }
-.zh-toolbar-left { display: flex; gap: 8px; z-index: 10; }
+.zh-title {
+    font-weight: bold; color: #FF6F61; font-size: 1.3em; flex-grow: 1; text-align: center;
+    text-shadow: 1px 1px 0 #FFF;
+}
+
+/* 顶部按钮组 */
+.zh-toolbar-left, .zh-toolbar-right { display: flex; gap: 10px; align-items: center; }
+
 .zh-icon-btn {
-    background: rgba(255,255,255,0.3); border: 1px solid #D4AC0D;
-    border-radius: 4px; cursor: pointer; padding: 5px 8px; font-size: 1.1em;
-    transition: background 0.2s;
+    background: #FFF; border: 2px solid var(--zh-pink-light); color: #FF8A80;
+    border-radius: 15px; cursor: pointer; padding: 6px 12px; font-size: 1em;
+    transition: all 0.2s; font-weight: bold;
 }
-.zh-icon-btn:hover { background: rgba(255,255,255,0.6); }
+.zh-icon-btn:hover { background: var(--zh-pink-light); color: #FFF; transform: translateY(-2px); }
+
+.zh-btn-nav {
+    background: #B5EAD7; color: #555; border: none; padding: 6px 15px;
+    border-radius: 20px; cursor: pointer; font-size: 0.9em; font-weight: bold;
+    display: none; /* 默认隐藏，JS控制 */
+    box-shadow: 0 3px 0 #88D8B0; transition: all 0.1s;
+}
+.zh-btn-nav:active { transform: translateY(3px); box-shadow: none; }
+
 .zh-exit-btn {
-    background: #D35400; color: #fff; border: none; padding: 5px 12px;
-    border-radius: 4px; cursor: pointer; font-size: 0.9em;
+    background: #FF9A9E; color: #fff; border: none; padding: 6px 15px;
+    border-radius: 20px; box-shadow: 0 3px 0 #FF6F61; cursor: pointer; font-weight: bold;
 }
+.zh-exit-btn:active { transform: translateY(3px); box-shadow: none; }
 
 /* 视图容器 */
-.zh-view { display: none; flex-direction: column; height: 100%; padding: 20px; overflow-y: auto; }
+.zh-view { display: none; flex-direction: column; height: 100%; padding: 25px; overflow-y: auto; background: rgba(255,255,255,0.9); }
 .zh-view.active { display: flex; }
 
-/* 案件选择视图 */
-.zh-loading-text { text-align: center; margin-top: 50px; color: #888; font-style: italic; }
+/* 案件选择卡片 */
+.zh-loading-text { text-align: center; margin-top: 50px; color: #FF8A80; font-weight: bold; }
 .zh-selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
 .zh-select-card {
-    background: #fff; border: 2px solid #F4D03F; border-radius: 10px; padding: 15px;
-    cursor: pointer; transition: all 0.2s;
+    background: #FFF; border: 2px solid var(--zh-pink-light); border-radius: 20px; padding: 20px;
+    cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
 }
-.zh-select-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); background: #FFFDE7; }
-.zh-card-title { color: #D35400; font-weight: bold; margin-bottom: 10px; font-size: 1.1em; }
-.zh-card-preview { font-size: 0.9em; color: #666; line-height: 1.5; }
+.zh-select-card::before {
+    content: '🌸'; position: absolute; top: -5px; right: -5px; font-size: 40px; opacity: 0.2;
+}
+.zh-select-card:hover { transform: translateY(-5px) scale(1.02); border-color: var(--zh-pink); box-shadow: 0 10px 20px rgba(255,183,178,0.3); }
+.zh-card-title { color: #FF6F61; font-weight: bold; margin-bottom: 10px; font-size: 1.1em; }
+.zh-card-preview { font-size: 0.9em; color: #888; line-height: 1.5; }
 
-/* 案件详情视图 */
+/* 案件详情 */
 .zh-detail-container { display: flex; flex-direction: column; height: 100%; gap: 15px; }
-.zh-case-info { background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #eee; flex-shrink: 0; }
-.zh-case-title { margin: 0 0 10px 0; color: #D35400; font-size: 1.3em; }
-.zh-advice-row { display: flex; gap: 10px; flex-shrink: 0; }
-.zh-advice-box { flex: 1; padding: 10px; border-radius: 8px; font-size: 0.9em; }
-.zh-advice-lin { background: #E0F7FA; border: 1px solid #81D4FA; }
-.zh-advice-xiao { background: #FFEBEE; border: 1px solid #FFAB91; }
-.zh-name-tag { font-weight: bold; display: block; margin-bottom: 5px; }
-.zh-chat-log {
-    flex-grow: 1; background: rgba(255,255,255,0.6); border: 1px solid #ccc;
-    border-radius: 8px; padding: 10px; overflow-y: auto; font-size: 0.9em; margin-bottom: 10px;
+.zh-case-info {
+    background: #FFF; padding: 20px; border-radius: 20px;
+    border: 2px dashed var(--zh-gold); flex-shrink: 0;
 }
-.zh-msg { margin-bottom: 8px; padding: 5px 8px; border-radius: 5px; max-width: 80%; }
-.zh-msg.lin { background: #E0F7FA; color: #01579B; align-self: flex-start; }
-.zh-msg.xiao { background: #FFEBEE; color: #BF360C; align-self: flex-start; }
-.zh-msg.user { background: #FFF3E0; color: #E65100; margin-left: auto; text-align: right; }
+.zh-case-title { margin: 0 0 10px 0; color: #FBC02D; font-size: 1.4em; display: flex; align-items: center; gap: 10px;}
+.zh-advice-row { display: flex; gap: 15px; flex-shrink: 0; }
+.zh-advice-box { flex: 1; padding: 15px; border-radius: 15px; font-size: 0.95em; position: relative; }
+.zh-advice-lin { background: #E0F7FA; border: 2px solid #B2EBF2; color: #006064; }
+.zh-advice-xiao { background: #FFEBEE; border: 2px solid #FFCDD2; color: #B71C1C; }
+
+/* 聊天记录区 (可爱化) */
+.zh-chat-log {
+    flex-grow: 1; background: #FFF; border: 2px solid var(--zh-pink-light);
+    border-radius: 15px; padding: 15px; overflow-y: auto; font-size: 0.95em; margin-bottom: 10px;
+}
+.zh-msg { margin-bottom: 12px; padding: 10px 15px; border-radius: 15px; max-width: 85%; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+/* 林观砚消息 */
+.zh-msg.lin { background: #E1F5FE; color: #0277BD; align-self: flex-start; border-bottom-left-radius: 2px; }
+.zh-msg.lin::before { content: '🎋'; position: absolute; left: -25px; bottom: 0; font-size: 20px; }
+/* 萧则燃消息 */
+.zh-msg.xiao { background: #FFEBEE; color: #D84315; align-self: flex-start; border-bottom-left-radius: 2px; }
+.zh-msg.xiao::before { content: '🔥'; position: absolute; left: -25px; bottom: 0; font-size: 20px; }
+/* User消息 */
+.zh-msg.user { background: #FFF3E0; color: #EF6C00; margin-left: auto; text-align: right; border-bottom-right-radius: 2px; }
+
+/* 底部操作区 */
 .zh-action-area { display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
 .zh-chat-input-row { display: flex; gap: 10px; }
-.zh-chat-input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-.zh-chat-send { background: #8D6E63; color: #fff; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; }
-.zh-decision-row { display: flex; gap: 10px; margin-top: 5px; }
-.zh-btn { flex: 1; padding: 10px; border: none; border-radius: 20px; cursor: pointer; color: #fff; font-weight: bold; }
-.zh-btn:hover { opacity: 0.9; }
-.btn-lin { background: #0288D1; } .btn-xiao { background: #D84315; } .btn-custom { background: #FBC02D; color: #5D4037; }
+.zh-chat-input {
+    flex: 1; padding: 10px; border: 2px solid #EEE; border-radius: 20px; outline: none; transition: border 0.2s;
+}
+.zh-chat-input:focus { border-color: var(--zh-pink); }
+.zh-chat-send {
+    background: #8D6E63; color: #fff; border: none; padding: 0 20px;
+    border-radius: 20px; cursor: pointer; font-weight: bold;
+}
 
-/* --- 弹窗通用样式 (配置/警告/自定义) --- */
+.zh-decision-row { display: flex; gap: 10px; margin-top: 5px; }
+.zh-btn { flex: 1; padding: 12px; border: none; border-radius: 25px; cursor: pointer; color: #fff; font-weight: bold; box-shadow: 0 4px 0 rgba(0,0,0,0.1); transition: transform 0.1s;}
+.zh-btn:active { transform: translateY(4px); box-shadow: none; }
+.btn-lin { background: #4FC3F7; } .btn-xiao { background: #FF8A65; } .btn-custom { background: #FDD835; color: #5D4037; }
+
+/* 弹窗通用 */
 .zh-modal-layer {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 100;
+    background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; z-index: 100;
 }
-.zh-modal-box { background: #fff; padding: 20px; border-radius: 10px; width: 80%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-.zh-modal-title { margin-top: 0; color: #D35400; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
-.zh-input-group { margin-bottom: 15px; }
-.zh-input-label { display: block; font-size: 0.9em; color: #666; margin-bottom: 5px; }
-.zh-input-field { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-.zh-modal-footer { text-align: right; display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-.zh-btn-secondary { background: #999; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
-.zh-btn-primary { background: #0288D1; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
-.zh-btn-danger { background: #D32F2F; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+.zh-modal-box {
+    background: #FFF; padding: 25px; border-radius: 20px; width: 80%; max-width: 500px;
+    box-shadow: 0 10px 30px rgba(255, 183, 178, 0.5); border: 3px solid var(--zh-pink-light);
+}
+.zh-input-field { width: 100%; padding: 10px; border: 2px solid #EEE; border-radius: 10px; box-sizing: border-box; }
+.zh-modal-footer { margin-top: 20px; text-align: right; }
