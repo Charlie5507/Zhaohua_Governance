@@ -1,28 +1,146 @@
-// --- 昭华政务生成器 v2.0 (AI实时生成版) ---
+// --- 昭华政务生成器 v2.1 (独立API配置版) ---
 import { getContext } from '../../../extensions.js';
 
 const ZhaohuaGov = {
     panelLoaded: false,
-    currentCases: [], // 存储生成的案件列表
-    activeCase: null, // 当前选中的案件
+    currentCases: [],
+    activeCase: null,
+    // 默认配置
+    settings: {
+        endpoint: "",
+        key: "",
+        model: ""
+    },
 
     async init() {
-        console.log("👑 [Zhaohua v2] 启动中...");
+        console.log("👑 [Zhaohua v2.1] 启动中...");
+        this.loadSettings(); // 加载本地配置
         this.injectToggleButton();
         await this.loadHTML();
         if (this.panelLoaded) {
             this.bindEvents();
-            console.log("✅ [Zhaohua v2] 就绪。");
+            console.log("✅ [Zhaohua v2.1] 就绪。");
         }
     },
+
+    // --- 存储管理 ---
+    loadSettings() {
+        const saved = localStorage.getItem("zhaohua_settings");
+        if (saved) {
+            try {
+                this.settings = JSON.parse(saved);
+            } catch (e) { console.error("配置加载失败", e); }
+        }
+    },
+
+    saveSettings() {
+        const ep = document.getElementById("zh-cfg-endpoint").value.trim();
+        const key = document.getElementById("zh-cfg-key").value.trim();
+        const model = document.getElementById("zh-cfg-model").value;
+
+        this.settings = { endpoint: ep, key: key, model: model };
+        localStorage.setItem("zhaohua_settings", JSON.stringify(this.settings));
+        
+        if (typeof toastr !== "undefined") toastr.success("昭华政务配置已保存");
+        this.closeModal("zh-modal-config");
+    },
+
+    // --- API 交互 ---
+    // 拉取模型列表
+    async fetchModels() {
+        const ep = document.getElementById("zh-cfg-endpoint").value.trim();
+        const key = document.getElementById("zh-cfg-key").value.trim();
+        const select = document.getElementById("zh-cfg-model");
+
+        if (!ep) { alert("请先输入API Endpoint"); return; }
+
+        select.innerHTML = '<option>加载中...</option>';
+        
+        try {
+            // 尝试适配 /v1/models
+            let url = ep.endsWith('/') ? `${ep}models` : `${ep}/models`;
+            // 有些后端 endpoint 写得不规范，做个兼容
+            if (ep.endsWith('/v1')) url = `${ep}/models`;
+            
+            const res = await fetch(url, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${key}` }
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            
+            select.innerHTML = '';
+            const models = data.data || data.models || []; // 兼容不同格式
+            
+            models.forEach(m => {
+                const opt = document.createElement("option");
+                opt.value = m.id;
+                opt.text = m.id;
+                select.appendChild(opt);
+            });
+
+            if (models.length > 0 && this.settings.model) {
+                select.value = this.settings.model;
+            }
+
+            if (typeof toastr !== "undefined") toastr.success(`成功获取 ${models.length} 个模型`);
+
+        } catch (e) {
+            console.error(e);
+            select.innerHTML = '<option value="">获取失败</option>';
+            alert("获取模型列表失败，请检查Endpoint和Key。\n" + e.message);
+        }
+    },
+
+    // 通用 LLM 调用 (优先使用自定义配置)
+    async fetchLLM(promptText) {
+        // 1. 如果有自定义配置，使用自定义配置
+        if (this.settings.endpoint && this.settings.key) {
+            let url = this.settings.endpoint;
+            if (!url.endsWith('/chat/completions')) {
+                url = url.endsWith('/') ? `${url}chat/completions` : `${url}/chat/completions`;
+            }
+
+            const body = {
+                model: this.settings.model || "gpt-3.5-turbo",
+                messages: [
+                    { role: "system", content: "You are a creative writing assistant." },
+                    { role: "user", content: promptText }
+                ],
+                temperature: 0.7
+            };
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.settings.key}`
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (!res.ok) throw new Error(`Custom API Error: ${res.status}`);
+            const data = await res.json();
+            return data.choices[0].message.content;
+        } 
+        // 2. 否则回退到 ST 内部 API (Context)
+        else {
+            // 这里为了简化，如果没有配置，提示用户配置
+            // 或者你可以保留原来的 ST context 代码作为 fallback
+            throw new Error("请先点击左上角⚙️配置API信息！");
+        }
+    },
+
+    // --- 逻辑控制 ---
 
     injectToggleButton() {
         if (document.getElementById("zhaohua-toggle-btn")) return;
         const btn = document.createElement("div");
         btn.id = "zhaohua-toggle-btn";
         btn.innerHTML = "📜";
-        btn.title = "生成今日政务";
-        btn.onclick = (e) => { e.stopPropagation(); this.generateDailyCases(); };
+        btn.title = "打开昭华政务";
+        btn.onclick = (e) => { e.stopPropagation(); this.openPanel(); };
         document.body.appendChild(btn);
     },
 
@@ -38,118 +156,77 @@ const ZhaohuaGov = {
         } catch (e) { console.error("HTML加载失败", e); }
     },
 
-    // --- 核心功能：调用AI生成案件 ---
-    async generateDailyCases() {
+    openPanel() {
         const overlay = document.getElementById("zhaohua-overlay");
-        const loading = document.getElementById("zh-loading");
-        const grid = document.getElementById("zh-selection-grid");
-        const btn = document.getElementById("zhaohua-toggle-btn");
-
-        // 切换到选择视图
-        this.switchView('selection');
         overlay.style.display = "flex";
-        grid.innerHTML = "";
-        loading.style.display = "block";
-        btn.classList.add("loading");
+        this.renderSelectionGrid(); // 刷新列表显示
+    },
 
-        // 构造 Prompt
+    // 点击“生成案件”按钮
+    handleGenerateClick() {
+        if (this.currentCases.length > 0) {
+            // 弹出确认框
+            document.getElementById("zh-modal-confirm").style.display = "flex";
+        } else {
+            this.generateDailyCases();
+        }
+    },
+
+    async generateDailyCases() {
+        // 关闭确认弹窗
+        document.getElementById("zh-modal-confirm").style.display = "none";
+        
+        const loading = document.getElementById("zh-loading");
+        const emptyTip = document.getElementById("zh-empty-tip");
+        const grid = document.getElementById("zh-selection-grid");
+        
+        this.switchView('selection');
+        grid.innerHTML = "";
+        emptyTip.style.display = "none";
+        loading.style.display = "block";
+
         const prompt = `
         Roleplay as a dynamic event generator for a game set in ancient China (Song/Yuan dynasty style).
-        Characters:
-        1. User (Young Emperor)
-        2. Lin Guanyan (Advisor, serious, scheming, elegant, gentle but strict)
-        3. Xiao Zeran (General's son, energetic, hot-blooded, reckless, funny)
-
-        Task: Generate 2 funny, lighthearted, daily-life court cases or problems for the User to solve.
-        Format: Strictly JSON array. No markdown, no explanation.
-        Structure per case:
-        {
-            "title": "Case Title",
-            "desc": "Description of the funny problem",
-            "lin_advice": "Lin's advice (in character, slightly sarcastic or overly proper)",
-            "xiao_advice": "Xiao's advice (in character, reckless or chaotic)"
-        }
-        
-        Make the cases funny and related to the setting (e.g., a camel spitting on a guard, a poet writing graffiti, a cat stealing the royal seal).
+        Characters: User (Young Emperor), Lin Guanyan (Advisor, scheming), Xiao Zeran (General's son, reckless).
+        Task: Generate 2 funny, lighthearted court cases.
+        Format: Strictly JSON array. No markdown.
+        Structure: [{"title": "...", "desc": "...", "lin_advice": "...", "xiao_advice": "..."}]
         Language: Simplified Chinese.
         `;
 
         try {
-            // 调用 ST 的生成接口
-            // 注意：这里使用 generateRaw 是假设想获取纯文本，但在扩展中通常通过 context.generate 
-            // 为了不污染聊天记录，我们手动构造请求
-            const context = getContext();
-            
-            // 发送系统指令（隐藏）
-            // 这里的实现技巧：使用 fetch 直接请求 API 或者利用 context 
-            // 简单起见，我们模拟一次生成，但在此之前，建议用户在设置里把 Response Length 调高一点
-            
-            // ⚠️ 关键：为了确保能拿到 JSON，我们使用 'Quiet' 模式或手动处理
-            // 这里使用一个简单的 fetch 包装器来调用 ST 的 completion API
             const result = await this.fetchLLM(prompt);
-            
-            // 解析 JSON
             let jsonStr = result.replace(/```json|```/g, '').trim();
-            // 尝试提取数组部分
             const firstBracket = jsonStr.indexOf('[');
             const lastBracket = jsonStr.lastIndexOf(']');
             if (firstBracket !== -1 && lastBracket !== -1) {
                 jsonStr = jsonStr.substring(firstBracket, lastBracket + 1);
             }
-
             this.currentCases = JSON.parse(jsonStr);
             this.renderSelectionGrid();
-
         } catch (e) {
-            console.error("生成失败", e);
-            grid.innerHTML = `<div style="color:red; text-align:center;">生成失败，请重试。<br>错误信息: ${e.message}</div>`;
+            console.error(e);
+            grid.innerHTML = `<div style="color:red; text-align:center;">生成失败: ${e.message}</div>`;
         } finally {
             loading.style.display = "none";
-            btn.classList.remove("loading");
         }
     },
 
-    // 模拟调用 LLM (适配 ST API)
-    async fetchLLM(promptText) {
-        const context = getContext();
-        // 获取当前设置
-        const url = '/api/generate'; // ST 标准 API 端点
-        
-        // 简单的请求体构造
-        const body = {
-            prompt: promptText,
-            max_length: 600,
-            temperature: 0.7,
-            top_p: 0.9,
-            top_k: 0,
-            rep_pen: 1.1
-        };
-
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-
-        if (!response.ok) throw new Error('API Request Failed');
-        const data = await response.json();
-        // 处理不同后端返回格式
-        return data.results ? data.results[0].text : data.text; 
-    },
-
-    // --- 渲染逻辑 ---
-
     renderSelectionGrid() {
         const grid = document.getElementById("zh-selection-grid");
+        const emptyTip = document.getElementById("zh-empty-tip");
         grid.innerHTML = "";
+
+        if (this.currentCases.length === 0) {
+            emptyTip.style.display = "block";
+            return;
+        }
+        emptyTip.style.display = "none";
 
         this.currentCases.forEach((affair, index) => {
             const card = document.createElement("div");
             card.className = "zh-select-card";
-            card.innerHTML = `
-                <div class="zh-card-title">${affair.title}</div>
-                <div class="zh-card-preview">${affair.desc.substring(0, 50)}...</div>
-            `;
+            card.innerHTML = `<div class="zh-card-title">${affair.title}</div><div class="zh-card-preview">${affair.desc.substring(0, 50)}...</div>`;
             card.onclick = () => this.selectCase(index);
             grid.appendChild(card);
         });
@@ -158,19 +235,11 @@ const ZhaohuaGov = {
     selectCase(index) {
         this.activeCase = this.currentCases[index];
         this.switchView('detail');
-
-        // 填充详情
         document.getElementById("zh-detail-title").innerText = this.activeCase.title;
         document.getElementById("zh-detail-desc").innerText = this.activeCase.desc;
         document.getElementById("zh-detail-lin").innerText = this.activeCase.lin_advice;
         document.getElementById("zh-detail-xiao").innerText = this.activeCase.xiao_advice;
-        
-        // 清空聊天记录
-        document.getElementById("zh-chat-log").innerHTML = `
-            <div style="color:#999; text-align:center; font-style:italic; padding-top:20px;">
-                在此处与他们商议，或直接做出决断...
-            </div>
-        `;
+        document.getElementById("zh-chat-log").innerHTML = `<div style="color:#999; text-align:center; font-style:italic; padding-top:20px;">在此处与他们商议...</div>`;
     },
 
     async sendChat() {
@@ -179,118 +248,102 @@ const ZhaohuaGov = {
         if (!text) return;
 
         const log = document.getElementById("zh-chat-log");
-        
-        // 1. 添加用户消息
         const userMsg = document.createElement("div");
         userMsg.className = "zh-msg user";
         userMsg.innerText = text;
         log.appendChild(userMsg);
         input.value = "";
-        log.scrollTop = log.scrollHeight;
-
-        // 2. 构造 Prompt 获取 NPC 回复
-        const prompt = `
-        Context: Ancient China setting.
-        Case: ${this.activeCase.title} - ${this.activeCase.desc}
-        Characters: Lin Guanyan (Serious advisor), Xiao Zeran (Reckless general's son).
-        User says: "${text}"
-        Task: Provide a short dialogue response from BOTH Lin Guanyan and Xiao Zeran reacting to the user.
-        Format: 
-        Lin: [Response]
-        Xiao: [Response]
-        Language: Simplified Chinese. Keep it short and funny.
-        `;
-
-        // 显示正在输入...
+        
         const loadingMsg = document.createElement("div");
         loadingMsg.innerText = "Thinking...";
-        loadingMsg.style.fontSize = "0.8em";
-        loadingMsg.style.color = "#999";
         log.appendChild(loadingMsg);
+        log.scrollTop = log.scrollHeight;
+
+        const prompt = `
+        Context: Ancient China. Case: ${this.activeCase.title}.
+        Characters: Lin Guanyan (Advisor), Xiao Zeran (General).
+        User says: "${text}"
+        Task: Provide short dialogue response from Lin and Xiao.
+        Format: Lin: ... \n Xiao: ...
+        Language: Simplified Chinese.
+        `;
 
         try {
             const result = await this.fetchLLM(prompt);
             log.removeChild(loadingMsg);
-
-            // 简单解析回复
             const lines = result.split('\n');
             lines.forEach(line => {
                 if (line.includes("Lin:") || line.includes("林")) {
-                    const d = document.createElement("div");
-                    d.className = "zh-msg lin";
-                    d.innerText = line.replace(/Lin:|林:|Lin Guanyan:/i, "🎋 林:").trim();
-                    log.appendChild(d);
-                }
-                else if (line.includes("Xiao:") || line.includes("萧")) {
-                    const d = document.createElement("div");
-                    d.className = "zh-msg xiao";
-                    d.innerText = line.replace(/Xiao:|萧:|Xiao Zeran:/i, "🔥 萧:").trim();
-                    log.appendChild(d);
+                    const d = document.createElement("div"); d.className = "zh-msg lin"; d.innerText = line.replace(/Lin:|林:|Lin Guanyan:/i, "🎋 林:").trim(); log.appendChild(d);
+                } else if (line.includes("Xiao:") || line.includes("萧")) {
+                    const d = document.createElement("div"); d.className = "zh-msg xiao"; d.innerText = line.replace(/Xiao:|萧:|Xiao Zeran:/i, "🔥 萧:").trim(); log.appendChild(d);
                 }
             });
             log.scrollTop = log.scrollHeight;
-
-        } catch (e) {
-            loadingMsg.innerText = "回复失败";
-        }
+        } catch (e) { loadingMsg.innerText = "Error: " + e.message; }
     },
-
-    // --- 决策逻辑 ---
 
     makeDecision(type) {
         let text = "";
-        const caseInfo = `【处理政务：${this.activeCase.title}】\n案情：${this.activeCase.desc}\n`;
-
-        if (type === 'lin') {
-            text = `${caseInfo}朕决定采纳林观砚的建议：${this.activeCase.lin_advice}\n（转头对林观砚说）“林卿所言极是，就按你说的办。”`;
-        } else if (type === 'xiao') {
-            text = `${caseInfo}朕决定采纳萧则燃的建议：${this.activeCase.xiao_advice}\n（拍拍萧则燃的肩膀）“这次就听你的，别给朕搞砸了！”`;
-        } else if (type === 'custom') {
-            const customText = document.getElementById("zh-custom-text").value;
-            if (!customText) return;
-            text = `${caseInfo}朕决定：${customText}`;
-            document.getElementById("zh-custom-modal").style.display = "none";
+        const info = `【处理政务：${this.activeCase.title}】\n案情：${this.activeCase.desc}\n`;
+        if (type === 'lin') text = `${info}朕决定采纳林观砚建议：${this.activeCase.lin_advice}`;
+        else if (type === 'xiao') text = `${info}朕决定采纳萧则燃建议：${this.activeCase.xiao_advice}`;
+        else if (type === 'custom') {
+            text = `${info}朕决定：${document.getElementById("zh-custom-text").value}`;
+            this.closeModal("zh-modal-custom");
         }
 
-        // 填入 ST 输入框并发送
-        const textarea = document.getElementById('send_textarea');
-        if (textarea) {
-            textarea.value = text;
-            textarea.dispatchEvent(new Event('input', { bubbles: true }));
-            document.getElementById('zhaohua-overlay').style.display = "none"; // 关闭弹窗
-            // document.getElementById('send_but').click(); // 自动发送（可选）
-        }
+        const ta = document.getElementById('send_textarea');
+        if (ta) { ta.value = text; ta.dispatchEvent(new Event('input', { bubbles: true })); }
+        document.getElementById("zhaohua-overlay").style.display = "none";
     },
 
-    // --- 辅助功能 ---
-    switchView(viewName) {
+    // UI 辅助
+    switchView(name) {
         document.querySelectorAll('.zh-view').forEach(v => v.classList.remove('active'));
-        if (viewName === 'selection') document.getElementById('zh-view-selection').classList.add('active');
-        if (viewName === 'detail') document.getElementById('zh-view-detail').classList.add('active');
+        document.getElementById(`zh-view-${name}`).classList.add('active');
     },
+    showConfigModal() {
+        document.getElementById("zh-modal-config").style.display = "flex";
+        // 填充当前值
+        document.getElementById("zh-cfg-endpoint").value = this.settings.endpoint || "";
+        document.getElementById("zh-cfg-key").value = this.settings.key || "";
+        
+        // 如果有模型，尝试恢复选中（需要先拉取列表，这里简化处理，只填值）
+        const select = document.getElementById("zh-cfg-model");
+        if (this.settings.model && select.options.length === 0) {
+            const opt = document.createElement("option");
+            opt.value = this.settings.model;
+            opt.text = this.settings.model;
+            select.appendChild(opt);
+            select.value = this.settings.model;
+        }
+    },
+    closeModal(id) { document.getElementById(id).style.display = "none"; },
 
     bindEvents() {
-        document.getElementById("zh-btn-global-exit").onclick = () => {
-            document.getElementById("zhaohua-overlay").style.display = "none";
-        };
+        // 全局退出
+        document.getElementById("zh-btn-global-exit").onclick = () => document.getElementById("zhaohua-overlay").style.display = "none";
         
+        // 配置相关
+        document.getElementById("zh-btn-config").onclick = () => this.showConfigModal();
+        document.getElementById("zh-cfg-cancel").onclick = () => this.closeModal("zh-modal-config");
+        document.getElementById("zh-cfg-save").onclick = () => this.saveSettings();
+        document.getElementById("zh-btn-fetch-models").onclick = () => this.fetchModels();
+
+        // 生成相关
+        document.getElementById("zh-btn-generate").onclick = () => this.handleGenerateClick();
+        document.getElementById("zh-confirm-cancel").onclick = () => this.closeModal("zh-modal-confirm");
+        document.getElementById("zh-confirm-ok").onclick = () => this.generateDailyCases();
+
+        // 聊天与决策
         document.getElementById("zh-btn-chat-send").onclick = () => this.sendChat();
-        
-        // 决策按钮
         document.getElementById("zh-adopt-lin").onclick = () => this.makeDecision('lin');
         document.getElementById("zh-adopt-xiao").onclick = () => this.makeDecision('xiao');
-        
-        // 自定义弹窗
-        document.getElementById("zh-adopt-custom").onclick = () => {
-            document.getElementById("zh-custom-modal").style.display = "flex";
-        };
-        document.getElementById("zh-custom-cancel").onclick = () => {
-            document.getElementById("zh-custom-modal").style.display = "none";
-        };
+        document.getElementById("zh-adopt-custom").onclick = () => document.getElementById("zh-modal-custom").style.display = "flex";
+        document.getElementById("zh-custom-cancel").onclick = () => this.closeModal("zh-modal-custom");
         document.getElementById("zh-custom-confirm").onclick = () => this.makeDecision('custom');
     }
 };
 
-(function() {
-    ZhaohuaGov.init();
-})();
+(function() { ZhaohuaGov.init(); })();
