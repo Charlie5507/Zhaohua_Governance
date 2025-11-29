@@ -5,19 +5,23 @@
             <div class="zh-header">
                 <div class="zh-toolbar-left">
                     <button class="zh-icon-btn" id="zh-btn-config" title="配置API">⚙️</button>
-                    <button class="zh-icon-btn" id="zh-btn-generate" title="生成新案件">🆕 生成案件</button>
+                    <button class="zh-icon-btn" id="zh-btn-generate" title="生成新案件">✨ 生成案件</button>
                 </div>
-                <div class="zh-title">👑 昭华政务殿</div>
-                <button class="zh-exit-btn" id="zh-btn-global-exit">退出</button>
+                <div class="zh-title">🌸 昭华政务殿 🌸</div>
+                <div class="zh-toolbar-right">
+                    <!-- 返回按钮，默认隐藏，详情页显示 -->
+                    <button class="zh-btn-nav" id="zh-btn-back">↩ 返回列表</button>
+                    <button class="zh-exit-btn" id="zh-btn-global-exit">退出</button>
+                </div>
             </div>
 
             <!-- 视图1：选择列表 -->
             <div id="zh-view-selection" class="zh-view active">
                 <div id="zh-loading" class="zh-loading-text" style="display:none;">
-                    正在召集林观砚与萧则燃商议...<br>(AI正在生成中，请稍候)
+                    🎀 正在召集林观砚与萧则燃...<br>(AI少女正在努力生成中...)
                 </div>
                 <div id="zh-empty-tip" class="zh-loading-text">
-                    暂无待办政务，请点击左上角“生成案件”
+                    ✨ 暂无待办政务 ✨<br>请点击左上角“生成案件”
                 </div>
                 <div id="zh-selection-grid" class="zh-selection-grid"></div>
             </div>
@@ -26,7 +30,7 @@
             <div id="zh-view-detail" class="zh-view">
                 <div class="zh-detail-container">
                     <div class="zh-case-info">
-                        <h3 class="zh-case-title" id="zh-detail-title">标题</h3>
+                        <h3 class="zh-case-title"><span style="font-size:1.5em">📜</span> <span id="zh-detail-title">标题</span></h3>
                         <div class="zh-case-desc" id="zh-detail-desc">描述</div>
                     </div>
                     <div class="zh-advice-row">
@@ -38,17 +42,19 @@
                         </div>
                     </div>
                     <div class="zh-chat-log" id="zh-chat-log">
-                        <div style="color:#999; text-align:center; font-style:italic; padding-top:20px;">在此处与他们商议...</div>
+                        <div style="color:#FFB7B2; text-align:center; font-style:italic; padding-top:20px;">
+                            ✨ 在此处与他们商议，或直接做出决断... ✨
+                        </div>
                     </div>
                     <div class="zh-action-area">
                         <div class="zh-chat-input-row">
-                            <input type="text" class="zh-chat-input" id="zh-chat-input" placeholder="输入你的想法...">
-                            <button class="zh-chat-send" id="zh-btn-chat-send">🗣️ 讨论</button>
+                            <input type="text" class="zh-chat-input" id="zh-chat-input" placeholder="输入你的想法 (他们会回应你哦)...">
+                            <button class="zh-chat-send" id="zh-btn-chat-send">💖 讨论</button>
                         </div>
                         <div class="zh-decision-row">
-                            <button class="zh-btn btn-lin" id="zh-adopt-lin">✅ 采纳林观砚</button>
-                            <button class="zh-btn btn-custom" id="zh-adopt-custom">✏️ 自定义</button>
-                            <button class="zh-btn btn-xiao" id="zh-adopt-xiao">✅ 采纳萧则燃</button>
+                            <button class="zh-btn btn-lin" id="zh-adopt-lin">听林观砚的</button>
+                            <button class="zh-btn btn-custom" id="zh-adopt-custom">✏️ 自己决定</button>
+                            <button class="zh-btn btn-xiao" id="zh-adopt-xiao">听萧则燃的</button>
                         </div>
                     </div>
                 </div>
@@ -57,49 +63,49 @@
             <!-- 弹窗1：API配置 -->
             <div id="zh-modal-config" class="zh-modal-layer">
                 <div class="zh-modal-box">
-                    <h3 class="zh-modal-title">⚙️ API 设置</h3>
-                    <div class="zh-input-group">
-                        <label class="zh-input-label">API Endpoint (例如: https://api.openai.com/v1)</label>
-                        <input type="text" class="zh-input-field" id="zh-cfg-endpoint" placeholder="输入API地址">
+                    <h3 style="color:#FF8A80; margin-top:0;">⚙️ 魔法设置 (API)</h3>
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:0.9em; color:#888;">API Endpoint</label>
+                        <input type="text" class="zh-input-field" id="zh-cfg-endpoint" placeholder="https://...">
                     </div>
-                    <div class="zh-input-group">
-                        <label class="zh-input-label">API Key</label>
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:0.9em; color:#888;">API Key</label>
                         <input type="password" class="zh-input-field" id="zh-cfg-key" placeholder="sk-...">
                     </div>
-                    <div class="zh-input-group">
-                        <label class="zh-input-label">Select Model</label>
-                        <div style="display:flex; gap:10px;">
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:0.9em; color:#888;">Model</label>
+                        <div style="display:flex; gap:5px;">
                             <select class="zh-input-field" id="zh-cfg-model"></select>
-                            <button class="zh-btn-secondary" id="zh-btn-fetch-models" title="拉取模型列表">⬇️ 拉取</button>
+                            <button class="zh-icon-btn" id="zh-btn-fetch-models">⬇️</button>
                         </div>
                     </div>
                     <div class="zh-modal-footer">
-                        <button class="zh-btn-secondary" id="zh-cfg-cancel">取消</button>
-                        <button class="zh-btn-primary" id="zh-cfg-save">💾 保存配置</button>
+                        <button class="zh-icon-btn" id="zh-cfg-cancel">取消</button>
+                        <button class="zh-btn btn-lin" id="zh-cfg-save" style="padding:8px 15px; border-radius:10px;">💾 保存</button>
                     </div>
                 </div>
             </div>
 
-            <!-- 弹窗2：覆盖警告 -->
+            <!-- 弹窗2：确认 -->
             <div id="zh-modal-confirm" class="zh-modal-layer">
                 <div class="zh-modal-box">
-                    <h3 class="zh-modal-title">⚠️ 重新生成确认</h3>
-                    <p style="color:#666; margin-bottom:20px;">当前已有生成的案件。重新生成将覆盖现有案件，是否继续？</p>
+                    <h3 style="color:#FF8A80; margin-top:0;">⚠️ 覆盖确认</h3>
+                    <p style="color:#666;">要生成新的案件吗？旧的案件会消失哦！</p>
                     <div class="zh-modal-footer">
-                        <button class="zh-btn-secondary" id="zh-confirm-cancel">取消</button>
-                        <button class="zh-btn-danger" id="zh-confirm-ok">🔥 确认生成</button>
+                        <button class="zh-icon-btn" id="zh-confirm-cancel">取消</button>
+                        <button class="zh-btn btn-xiao" id="zh-confirm-ok" style="padding:8px 15px; border-radius:10px;">🔥 确认</button>
                     </div>
                 </div>
             </div>
 
-            <!-- 弹窗3：自定义圣旨 (之前的) -->
+            <!-- 弹窗3：自定义 -->
             <div id="zh-modal-custom" class="zh-modal-layer">
                 <div class="zh-modal-box">
-                    <h3 class="zh-modal-title">✏️ 拟定圣旨</h3>
+                    <h3 style="color:#FBC02D; margin-top:0;">✏️ 拟定圣旨</h3>
                     <textarea class="zh-input-field" id="zh-custom-text" style="height:100px;" placeholder="朕决定..."></textarea>
                     <div class="zh-modal-footer">
-                        <button class="zh-btn-secondary" id="zh-custom-cancel">取消</button>
-                        <button class="zh-btn-primary" id="zh-custom-confirm">盖印发布</button>
+                        <button class="zh-icon-btn" id="zh-custom-cancel">取消</button>
+                        <button class="zh-btn btn-custom" id="zh-custom-confirm" style="padding:8px 15px; border-radius:10px;">发布</button>
                     </div>
                 </div>
             </div>
