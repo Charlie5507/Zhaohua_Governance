@@ -1,8 +1,9 @@
 {
-    "display_name": "昭华政务生成器",
+    "display_name": "Zhaohua Governance",
+    "name": "Zhaohua Governance",
     "author": "YourName",
-    "version": "1.0.0",
-    "description": "为小皇帝角色卡提供一个可视化的奏折批阅界面，包含林观砚与萧则燃的专属建议。",
+    "version": "1.2.0",
+    "description": "昭华小皇帝政务扩展 - 悬浮按钮版。随机生成政务案件与伴读建议。",
     "js": "index.js",
     "css": "style.css",
     "html": "ui.html"
