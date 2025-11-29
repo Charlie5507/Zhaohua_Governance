@@ -1,0 +1,107 @@
+/* --- 昭华政务生成器 样式表 --- */
+#zhaohua-governance-btn {
+    position: fixed;
+    top: 10px;
+    right: 160px; /* 您可以调整这个值来改变按钮位置 */
+    z-index: 9998;
+    background: linear-gradient(135deg, #F4D03F 0%, #F1C40F 100%);
+    border: 2px solid #D4AC0D;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    color: #795548;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+#zhaohua-governance-btn:hover {
+    transform: scale(1.1) translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}
+
+#zhaohua-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(3px);
+}
+
+#zhaohua-modal {
+    background-color: #FFF9E6;
+    border: 4px solid #F4D03F;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    font-family: 'Microsoft YaHei', sans-serif;
+    animation: zh-popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes zh-popIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.zh-header {
+    background: #F4D03F;
+    padding: 15px;
+    text-align: center;
+    color: #8D6E63;
+    font-size: 1.4em;
+    font-weight: bold;
+    border-bottom: 2px dashed #D4AC0D;
+    position: relative;
+    user-select: none;
+}
+
+.zh-close {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 1.2em;
+    color: #fff;
+    opacity: 0.8;
+}
+.zh-close:hover { opacity: 1; }
+
+.zh-content { padding: 20px; }
+.zh-desc {
+    font-size: 1.1em;
+    line-height: 1.6;
+    color: #5D4037;
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    margin-bottom: 20px;
+}
+.zh-advices { display: flex; gap: 15px; flex-wrap: wrap; }
+.zh-card {
+    flex: 1;
+    min-width: 250px;
+    padding: 15px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+.zh-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+.zh-card.lin { background-color: #E0F7FA; border: 2px solid #81D4FA; }
+.zh-card.xiao { background-color: #FFEBEE; border: 2px solid #FFAB91; }
+.zh-avatar { font-size: 2em; margin-bottom: 10px; display: block; text-align: center; }
+.zh-name { font-weight: bold; display: block; margin-bottom: 5px; text-align: center;}
+.zh-text { font-size: 0.9em; font-style: italic; color: #555; }
